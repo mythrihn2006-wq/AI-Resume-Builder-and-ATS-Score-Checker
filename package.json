@@ -1,0 +1,10 @@
+{
+  "name": "ats-resume-builder",
+  "version": "1.0.0",
+  "description": "AI-Powered Resume Builder & Automated Tracking System (ATS) Optimizer",
+  "scripts": {
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "install-all": "cd server && npm install && cd ../client && npm install"
+  }
+}
