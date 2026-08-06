@@ -190,9 +190,10 @@ function runAtsAnalysis(rawText, fileExt, jobDescription) {
 const extractTextFromFile = async (file, fileExt) => {
   if (fileExt === 'pdf') {
     const { PDFParse } = require('pdf-parse');
-    const pdfParser = new PDFParse(file.buffer);
+    const pdfParser = new PDFParse({ data: file.buffer });
     await pdfParser.load();
-    return await pdfParser.getText() || '';
+    const result = await pdfParser.getText();
+    return result?.text || '';
   }
   if (fileExt === 'docx') {
     const mammoth = require('mammoth');
@@ -244,9 +245,8 @@ const calculateATSScore = async (req, res) => {
     await resume.save();
 
     res.json({
-      resumeId: resume._id,
-      resumeTitle: resume.title,
-      atsScore: analysis.finalScore,
+      score: analysis.finalScore,
+      suggestions: analysis.suggestions || [],
       breakdown: {
         parseability: analysis.parseability,
         sections: analysis.sections,

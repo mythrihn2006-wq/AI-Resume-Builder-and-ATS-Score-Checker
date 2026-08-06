@@ -39,7 +39,8 @@ const resumeSchema = new mongoose.Schema({
     phone: { type: String, default: '', match: [/^\d{10}$|^$/, 'Phone number must be exactly 10 digits'] },
     linkedin: { type: String, default: '' },
     github: { type: String, default: '' },
-    portfolio: { type: String, default: '' }
+    portfolio: { type: String, default: '' },
+    profilePhoto: { type: String, default: '' }
   },
   education: [educationSchema],
   experience: [experienceSchema],

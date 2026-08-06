@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const { PDFDocument, rgb, StandardFonts, PageSizes } = require('pdf-lib');
+const fs = require('fs');
+const path = require('path');
 
 // Typography
 const FONT_SIZES = {
@@ -452,7 +454,7 @@ const renderSection = (
 // Global PDF instance
 let pdfDoc;
 
-const generateModernTemplate = async (pdfDoc, lines, font, boldFont) => {
+const generateModernTemplate = async (pdfDoc, lines, font, boldFont, profilePhoto = '') => {
 
   let page = pdfDoc.addPage(PageSizes.A4);
 
@@ -484,6 +486,26 @@ const generateModernTemplate = async (pdfDoc, lines, font, boldFont) => {
     if (section.title === "HEADER") {
 
       const name = clean(section.items[0] || "Your Name");
+
+      if (profilePhoto) {
+        try {
+          const cleanPath = profilePhoto.replace(/^\/+/, '');
+          const photoPathNew = path.join(__dirname, '../..', cleanPath);
+          const photoPathOld = path.join(__dirname, '..', cleanPath);
+          const photoPath = fs.existsSync(photoPathNew) ? photoPathNew : photoPathOld;
+          if (fs.existsSync(photoPath)) {
+            const imageBytes = fs.readFileSync(photoPath);
+            const isPng = photoPath.toLowerCase().endsWith('.png');
+            const image = isPng ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
+            const photoSize = 60;
+            const photoX = PAGE_WIDTH - MARGINS.right - photoSize;
+            const photoY = y - photoSize + 5;
+            page.drawImage(image, { x: photoX, y: photoY, width: photoSize, height: photoSize });
+          }
+        } catch (err) {
+          console.error('Failed to embed profile photo:', err.message);
+        }
+      }
 
       page.drawText(name, {
         x: MARGINS.left,
@@ -563,7 +585,7 @@ const generateModernTemplate = async (pdfDoc, lines, font, boldFont) => {
   return page;
 };
 
-const generateClassicTemplate = async (pdfDoc, lines, font, boldFont) => {
+const generateClassicTemplate = async (pdfDoc, lines, font, boldFont, profilePhoto = '') => {
 
   let page = pdfDoc.addPage(PageSizes.A4);
 
@@ -674,7 +696,7 @@ const generateClassicTemplate = async (pdfDoc, lines, font, boldFont) => {
   return page;
 };
 
-const generateProfessionalTemplate = async (pdfDoc, lines, font, boldFont) => {
+const generateProfessionalTemplate = async (pdfDoc, lines, font, boldFont, profilePhoto = '') => {
 
   let page = pdfDoc.addPage(PageSizes.A4);
 
@@ -840,7 +862,7 @@ const generateProfessionalTemplate = async (pdfDoc, lines, font, boldFont) => {
   return page;
 };
 
-const generateMinimalTemplate = async (pdfDoc, lines, font, boldFont) => {
+const generateMinimalTemplate = async (pdfDoc, lines, font, boldFont, profilePhoto = '') => {
 
   let page = pdfDoc.addPage(PageSizes.A4);
 
@@ -955,7 +977,7 @@ const generateMinimalTemplate = async (pdfDoc, lines, font, boldFont) => {
   return page;
 };
 
-const generateCreativeTemplate = async (pdfDoc, lines, font, boldFont) => {
+const generateCreativeTemplate = async (pdfDoc, lines, font, boldFont, profilePhoto = '') => {
   let page = pdfDoc.addPage(PageSizes.A4);
 
   const accent = rgb(0.50, 0.18, 0.72);
@@ -1151,7 +1173,7 @@ const generateCreativeTemplate = async (pdfDoc, lines, font, boldFont) => {
 
 };
 
-const generateExecutiveTemplate = async (pdfDoc, lines, font, boldFont) => {
+const generateExecutiveTemplate = async (pdfDoc, lines, font, boldFont, profilePhoto = '') => {
   let page = pdfDoc.addPage(PageSizes.A4);
 
   const accent = rgb(0.08, 0.08, 0.08);
@@ -1231,6 +1253,7 @@ const generateResumePDF = async (req, res) => {
     const {
       resumeText,
       template = "modern",
+      profilePhoto = ""
     } = req.body;
 
     // ==========================================
@@ -1293,7 +1316,8 @@ const generateResumePDF = async (req, res) => {
       pdfDoc,
       lines,
       font,
-      boldFont
+      boldFont,
+      profilePhoto
     );
 
     // ==========================================

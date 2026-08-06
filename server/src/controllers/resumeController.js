@@ -1,4 +1,6 @@
 const Resume = require('../models/Resume');
+const fs = require('fs');
+const path = require('path');
 
 const createResume = async (req, res) => {
   try {
@@ -52,4 +54,34 @@ const deleteResume = async (req, res) => {
   }
 };
 
-module.exports = { createResume, getResumes, getResumeById, updateResume, deleteResume };
+const uploadProfilePhoto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.file) return res.status(400).json({ message: 'No photo uploaded' });
+
+    const resume = await Resume.findOne({ _id: id, userId: req.user.id });
+    if (!resume) {
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    if (resume.personalInfo.profilePhoto) {
+      const cleanPath = resume.personalInfo.profilePhoto.replace(/^\/+/, '');
+      const oldPathNew = path.join(__dirname, '../..', cleanPath);
+      const oldPathOld = path.join(__dirname, '..', cleanPath);
+      const oldPath = fs.existsSync(oldPathNew) ? oldPathNew : oldPathOld;
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    const relativePath = `/uploads/${req.file.filename}`;
+    resume.personalInfo.profilePhoto = relativePath;
+    await resume.save();
+
+    res.json({ profilePhoto: relativePath });
+  } catch (error) {
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createResume, getResumes, getResumeById, updateResume, deleteResume, uploadProfilePhoto };

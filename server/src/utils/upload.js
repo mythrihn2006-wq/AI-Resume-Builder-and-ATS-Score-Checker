@@ -6,7 +6,7 @@ const path = require('path');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads');
+    const uploadDir = path.join(__dirname, '../../uploads');
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir);
   },
@@ -106,9 +106,10 @@ const analyzeUploadedResume = async (req, res) => {
     try {
       if (ext === '.pdf') {
         const dataBuffer = fs.readFileSync(filePath);
-        const pdfParser = new PDFParse(dataBuffer);
+        const pdfParser = new PDFParse({ data: dataBuffer });
         await pdfParser.load();
-        text = await pdfParser.getText() || '';
+        const result = await pdfParser.getText();
+        text = result?.text || '';
       } else if (ext === '.docx') {
         const result = await mammoth.extractRawText({ path: filePath });
         text = result.value || '';

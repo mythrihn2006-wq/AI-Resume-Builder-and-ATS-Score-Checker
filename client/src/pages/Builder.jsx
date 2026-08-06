@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Save, Download, Sparkles, BarChart3, FileText, Palette } from 'lucide-react';
+import { ArrowLeft, Save, Download, Sparkles, BarChart3, FileText, Palette, Upload } from 'lucide-react';
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
@@ -94,7 +94,7 @@ export default function Builder() {
   const navigate = useNavigate();
   const [resume, setResume] = useState({
     title: 'My Resume',
-    personalInfo: { fullName: '', email: '', phone: '', linkedin: '', github: '', portfolio: '' },
+    personalInfo: { fullName: '', email: '', phone: '', linkedin: '', github: '', portfolio: '', profilePhoto: '' },
     summary: '',
     education: [],
     experience: [],
@@ -205,7 +205,8 @@ export default function Builder() {
 
       const res = await api.post('/pdf/generate-pdf', {
         resumeText,
-        template: selectedTemplate
+        template: selectedTemplate,
+        profilePhoto: resume.personalInfo.profilePhoto || ''
       }, { responseType: 'blob' });
 
       const blob = new Blob([res.data], { type: 'application/pdf' });
@@ -219,6 +220,20 @@ export default function Builder() {
       alert('Failed to generate PDF');
     } finally {
       setPdfLoading(false);
+    }
+  };
+
+  const uploadProfilePhoto = async (file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    try {
+      const res = await api.post(`/resumes/${id}/upload-photo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setResume({ ...resume, personalInfo: { ...resume.personalInfo, profilePhoto: res.data.profilePhoto } });
+    } catch (err) {
+      alert('Failed to upload profile photo');
     }
   };
 
@@ -371,13 +386,26 @@ export default function Builder() {
                     {Object.keys(resume.personalInfo).map(key => (
                       <div key={key}>
                         <label className="block text-sm font-medium text-gray-700 capitalize">{key}</label>
-                        <input type={key === 'phone' ? 'tel' : 'text'} maxLength={key === 'phone' ? 10 : undefined} value={resume.personalInfo[key]}
-                          onChange={e => {
-                            const raw = e.target.value.replace(/\D/g, '');
-                            const value = key === 'phone' ? raw.slice(0, 10) : raw;
-                            setResume({...resume, personalInfo: {...resume.personalInfo, [key]: value}});
-                          }}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        {key === 'profilePhoto' ? (
+                          <div className="mt-1 flex items-center space-x-4">
+                            {resume.personalInfo.profilePhoto && (
+                              <img src={`${api.defaults.baseURL.replace('/api', '')}${resume.personalInfo.profilePhoto}`} alt="Profile" className="h-16 w-16 object-cover rounded-full border border-gray-300" />
+                            )}
+                            <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload Photo
+                              <input type="file" accept="image/*" className="hidden" onChange={e => uploadProfilePhoto(e.target.files[0])} />
+                            </label>
+                          </div>
+                        ) : (
+                          <input type={key === 'phone' ? 'tel' : 'text'} maxLength={key === 'phone' ? 10 : undefined} value={resume.personalInfo[key]}
+                            onChange={e => {
+                              const raw = e.target.value.replace(/\D/g, '');
+                              const value = key === 'phone' ? raw.slice(0, 10) : raw;
+                              setResume({...resume, personalInfo: {...resume.personalInfo, [key]: value}});
+                            }}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        )}
                       </div>
                     ))}
                   </div>
