@@ -23,11 +23,11 @@ const ResumePDF = ({ resume }) => (
       <View style={styles.header}>
         <Text style={styles.name}>{resume.personalInfo.fullName || 'Your Name'}</Text>
         <View style={styles.contact}>
-          {resume.personalInfo.email && <Text>{resume.personalInfo.email}  </Text>}
-          {resume.personalInfo.phone && <Text>{resume.personalInfo.phone}  </Text>}
-          {resume.personalInfo.linkedin && <Text>{resume.personalInfo.linkedin}  </Text>}
-          {resume.personalInfo.github && <Text>{resume.personalInfo.github}  </Text>}
-          {resume.personalInfo.portfolio && <Text>{resume.personalInfo.portfolio}</Text>}
+          {resume.personalInfo.email && <Text>✉ {resume.personalInfo.email}  </Text>}
+          {resume.personalInfo.phone && <Text>📱 {resume.personalInfo.phone}  </Text>}
+          {resume.personalInfo.linkedin && <Text>💼 {resume.personalInfo.linkedin}  </Text>}
+          {resume.personalInfo.github && <Text>💻 {resume.personalInfo.github}  </Text>}
+          {resume.personalInfo.portfolio && <Text>🌐 {resume.personalInfo.portfolio}</Text>}
         </View>
       </View>
 
@@ -371,8 +371,12 @@ export default function Builder() {
                     {Object.keys(resume.personalInfo).map(key => (
                       <div key={key}>
                         <label className="block text-sm font-medium text-gray-700 capitalize">{key}</label>
-                        <input type="text" value={resume.personalInfo[key]}
-                          onChange={e => setResume({...resume, personalInfo: {...resume.personalInfo, [key]: e.target.value}})}
+                        <input type={key === 'phone' ? 'tel' : 'text'} maxLength={key === 'phone' ? 10 : undefined} value={resume.personalInfo[key]}
+                          onChange={e => {
+                            const raw = e.target.value.replace(/\D/g, '');
+                            const value = key === 'phone' ? raw.slice(0, 10) : raw;
+                            setResume({...resume, personalInfo: {...resume.personalInfo, [key]: value}});
+                          }}
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                       </div>
                     ))}
@@ -420,17 +424,17 @@ export default function Builder() {
                         <div className="flex space-x-2">
                           <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700">Start</label>
-                            <input type="text" value={exp.startDate} onChange={e => {
+                            <input type="number" inputMode="numeric" value={exp.startDate} onChange={e => {
                               const updated = [...resume.experience];
-                              updated[expIndex].startDate = e.target.value;
+                              updated[expIndex].startDate = e.target.value.replace(/\D/g, '');
                               setResume({...resume, experience: updated});
                             }} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
                           </div>
                           <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700">End</label>
-                            <input type="text" value={exp.endDate} onChange={e => {
+                            <input type="number" inputMode="numeric" value={exp.endDate} onChange={e => {
                               const updated = [...resume.experience];
-                              updated[expIndex].endDate = e.target.value;
+                              updated[expIndex].endDate = e.target.value.replace(/\D/g, '');
                               setResume({...resume, experience: updated});
                             }} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
                           </div>
@@ -488,17 +492,17 @@ export default function Builder() {
                         <div className="flex space-x-2">
                           <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700">Start</label>
-                            <input type="text" value={edu.startDate} onChange={e => {
+                            <input type="number" inputMode="numeric" value={edu.startDate} onChange={e => {
                               const updated = [...resume.education];
-                              updated[index].startDate = e.target.value;
+                              updated[index].startDate = e.target.value.replace(/\D/g, '');
                               setResume({...resume, education: updated});
                             }} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
                           </div>
                           <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700">End</label>
-                            <input type="text" value={edu.endDate} onChange={e => {
+                            <input type="number" inputMode="numeric" value={edu.endDate} onChange={e => {
                               const updated = [...resume.education];
-                              updated[index].endDate = e.target.value;
+                              updated[index].endDate = e.target.value.replace(/\D/g, '');
                               setResume({...resume, education: updated});
                             }} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
                           </div>

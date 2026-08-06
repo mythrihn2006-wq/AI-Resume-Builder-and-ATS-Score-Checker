@@ -32,6 +32,14 @@ const PAGE_WIDTH = PageSizes.A4[0];
 const PAGE_HEIGHT = PageSizes.A4[1];
 const CONTENT_WIDTH = PAGE_WIDTH - MARGINS.left - MARGINS.right;
 
+const CONTACT_ICONS = {
+  Email: '\u0040',
+  Phone: '\u0028\u0029',
+  LinkedIn: 'in/',
+  GitHub: 'gh/',
+  Portfolio: '\u005B\u005D'
+};
+
 const clean = (text = '') => {
   return String(text)
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
@@ -322,14 +330,14 @@ const renderContactItem = (
   value,
   bulletColor,
   textColor,
-  bulletChar = "•"
+  bulletChar = "\u2022"
 ) => {
-  // Skip empty values
   if (!value || !value.trim()) return y;
 
   if (y < MARGINS.bottom + 20) return y;
 
-  // Clean the text
+  const iconChar = label && CONTACT_ICONS[label] ? CONTACT_ICONS[label] : bulletChar;
+
   const contactText = clean(
     label ? `${label}: ${value}` : value
   );
@@ -350,7 +358,7 @@ const renderContactItem = (
 
     // Draw bullet only once
     if (index === 0) {
-      page.drawText(bulletChar, {
+      page.drawText(iconChar, {
         x: bulletX,
         y,
         size: FONT_SIZES.contact + 1,
@@ -507,9 +515,8 @@ const generateModernTemplate = async (pdfDoc, lines, font, boldFont) => {
           y,
           label,
           value,
-          accent,
-          secondaryText,
-          "•"
+           accent,
+          secondaryText
         );
       }
 

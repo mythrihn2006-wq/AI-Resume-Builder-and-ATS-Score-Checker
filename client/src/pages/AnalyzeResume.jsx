@@ -131,7 +131,7 @@ export default function AnalyzeResume() {
                 <input
                   id="file-input"
                   type="file"
-                  accept=".pdf,.txt,.doc,.docx"
+                  accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.webp"
                   onChange={handleChange}
                   className="hidden"
                 />
@@ -145,7 +145,7 @@ export default function AnalyzeResume() {
                 ) : (
                   <div>
                     <p className="text-sm font-medium text-gray-300">Click to upload or drag and drop</p>
-                    <p className="text-xs text-gray-500">PDF, TXT, DOC, DOCX (max 10MB)</p>
+                    <p className="text-xs text-gray-500">PDF, TXT, DOC, DOCX, JPG, PNG (max 10MB)</p>
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
 const multer = require('multer');
-const pdf = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const mammoth = require('mammoth');
 const fs = require('fs');
 const path = require('path');
@@ -19,11 +19,20 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(pdf|txt|doc|docx)$/i)) {
+    const allowedTypes = [
+      'application/pdf',
+      'text/plain',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/jpg'
+    ];
+    if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(pdf|txt|doc|docx|jpg|jpeg|png|webp)$/i)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF, TXT, DOC, DOCX allowed.'));
+      cb(new Error('Invalid file type. Only PDF, TXT, DOC, DOCX, JPG, PNG allowed.'));
     }
   }
 });
@@ -97,8 +106,9 @@ const analyzeUploadedResume = async (req, res) => {
     try {
       if (ext === '.pdf') {
         const dataBuffer = fs.readFileSync(filePath);
-        const data = await pdf(dataBuffer);
-        text = data.text || '';
+        const pdfParser = new PDFParse(dataBuffer);
+        await pdfParser.load();
+        text = await pdfParser.getText() || '';
       } else if (ext === '.docx') {
         const result = await mammoth.extractRawText({ path: filePath });
         text = result.value || '';
@@ -106,12 +116,16 @@ const analyzeUploadedResume = async (req, res) => {
         text = fs.readFileSync(filePath, 'utf-8');
       } else if (ext === '.doc') {
         text = fs.readFileSync(filePath, 'utf-8');
+      } else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
+        const tesseract = require('tesseract.js');
+        const { data: { text: ocrText } } = await tesseract.recognize(filePath, 'eng');
+        text = ocrText || '';
       } else {
         text = fs.readFileSync(filePath, 'utf-8');
       }
     } catch (readError) {
       console.error('File read error:', readError);
-      return res.status(400).json({ message: 'Unable to read file. Please upload a valid PDF, DOCX, or TXT file.' });
+      return res.status(400).json({ message: 'Unable to read file. Please upload a valid PDF, DOCX, TXT, or image file.' });
     }
 
     if (!text || text.trim().length === 0) {

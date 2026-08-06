@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://ats-resume-builder.onrender.com/api/:splat"
+  to = "https://YOUR_BACKEND_URL.onrender.com/api/:splat"
   status = 200
   force = true
 
